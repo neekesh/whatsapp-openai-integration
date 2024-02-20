@@ -1,12 +1,13 @@
 
 import os
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 import logging
 from whatsapp_client import WhatsAppClient
 from fastapi.encoders import jsonable_encoder
 from openai_client import OpenAIClient
 from dotenv import load_dotenv
 
+wtsapp_client = WhatsAppClient()
 logger = logging.getLogger(__name__)
 load_dotenv()
 app = FastAPI()
@@ -20,21 +21,23 @@ async def root(request: Request):
         raise HTTPException(status_code=400, detail="Failure")
 
 
+def send_message(response):
+    openai_client = OpenAIClient()
+    reply = openai_client.complete(question=response["body"])
+    wtsapp_client.send_text_message(message=reply, phone_number=response["from_no"])
+
 
 @app.post("/webhook")
-async def receiveMsg(request: Request):
-    wtsapp_client = WhatsAppClient()
+async def receiveMsg(request: Request, background_task: BackgroundTasks):
+    
     data = await request.json()
     response = wtsapp_client.process_notification(data)
-    print("am i called", response)
+
 
     if response["statusCode"] == 200:
         if response["body"] and response["from_no"]:
-            openai_client = OpenAIClient()
-            reply = openai_client.complete(question=response["body"])
-            print ("\nreply is:"  + reply)
-            wtsapp_client.send_text_message(message=reply, phone_number=response["from_no"], )
-            print ("\nreply is sent to whatsapp cloud:" + str(response))
+            background_task.add_task(send_message, response)
+            
     
     return jsonable_encoder({"status": "success"})
 
