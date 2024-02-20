@@ -23,7 +23,6 @@ class WhatsAppClient:
 
 
     def send_template_message(self, template_name, language_code, phone_number):
-
         payload = {
             "messaging_product": "whatsapp",
             "to": phone_number,
@@ -35,11 +34,8 @@ class WhatsAppClient:
                 }
             }
         }
-
         response = requests.post(f"{self.API_URL}/messages", json=payload,headers=self.headers)
-
         assert response.status_code == 200, "Error sending message"
-
         return response.status_code
 
 

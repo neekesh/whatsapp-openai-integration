@@ -1,21 +1,23 @@
 
-from fastapi import FastAPI, Request
+import os
+from fastapi import FastAPI, HTTPException, Request
 import logging
 from whatsapp_client import WhatsAppClient
 from fastapi.encoders import jsonable_encoder
 from openai_client import OpenAIClient
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
-
+load_dotenv()
 app = FastAPI()
-
 
 @app.get("/webhook")
 async def root(request: Request):
 
-    if request.query_params.get('hub.verify_token') == "1234":
+    if request.query_params.get('hub.verify_token') == os.getenv("WHATSAPP_HOOK_TOKEN"):
         return int(request.query_params.get('hub.challenge'))
-
+    else:
+        raise HTTPException(status_code=400, detail="Failure")
 
 
 

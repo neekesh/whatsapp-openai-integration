@@ -1,3 +1,4 @@
+import os
 import openai
 import time
 
@@ -17,9 +18,8 @@ class OpenAIClient:
             api_key=self.api_key
         )
 
-        assistant = client.beta.assistants.retrieve("asst_Gw8ISj1mpqEhGtB52KDDk72N")
+        assistant = client.beta.assistants.retrieve(os.getenv("OPENAI_ASSISTANT_ID"))
         thread = client.beta.threads.create()
-
         client.beta.threads.messages.create(
             thread_id=thread.id, role="user", content=question
         )
