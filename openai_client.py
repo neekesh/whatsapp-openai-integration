@@ -1,25 +1,20 @@
-import os
 import openai
 import time
-
-
+import os
 from dotenv import load_dotenv
-load_dotenv()
 
 PROMPT = "Detailed description of how chat gpt builder will work just as detailed as you want "
-
+load_dotenv()
 class OpenAIClient:
-    def __init__(self):
-        self.api_key = os.getenv("OPENAI_API_KEY")
-        print ("\nopenai key is" + self.api_key + " and its type is " )
 
     def complete(self, question):
         client = openai.OpenAI(
-            api_key=self.api_key
+            api_key=os.getenv("OPENAI_API_KEY")
         )
 
         assistant = client.beta.assistants.retrieve(os.getenv("OPENAI_ASSISTANT_ID"))
         thread = client.beta.threads.create()
+
         client.beta.threads.messages.create(
             thread_id=thread.id, role="user", content=question
         )
@@ -53,6 +48,7 @@ class OpenAIClient:
 
 if __name__ == "__main__":
     client = OpenAIClient()
+    load_dotenv()
     response = client.complete("how are you")
     print (response)
     

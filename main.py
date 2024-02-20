@@ -1,6 +1,6 @@
 
 import os
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, status
 import logging
 from whatsapp_client import WhatsAppClient
 from fastapi.encoders import jsonable_encoder
@@ -27,7 +27,7 @@ def send_message(response):
     wtsapp_client.send_text_message(message=reply, phone_number=response["from_no"])
 
 
-@app.post("/webhook")
+@app.post("/webhook", status_code=status.HTTP_200_OK)
 async def receiveMsg(request: Request, background_task: BackgroundTasks):
     
     data = await request.json()

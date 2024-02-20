@@ -7,7 +7,7 @@ load_dotenv()
 
 class WhatsAppClient:
 
-    API_URL = "https://graph.facebook.com/v15.0/"
+    API_URL = "https://graph.facebook.com/v18.0/"
     WHATSAPP_API_TOKEN = os.getenv("WHATSAPP_API_TOKEN")
     WHATSAPP_CLOUD_NUMBER_ID = os.getenv("WHATSAPP_CLOUD_NUMBER_ID")
 
@@ -50,8 +50,6 @@ class WhatsAppClient:
             }
         }
         response = requests.post(f"{self.API_URL}/messages", json=payload,headers=self.headers)
-        print(response.status_code)
-        print(response.text)
         assert response.status_code == 200, "Error sending message"
         return response.status_code
 
