@@ -83,8 +83,3 @@ class WhatsAppClient:
 
 if __name__ == "__main__":
     client = WhatsAppClient()
-    # send a template message
-    client.send_template_message("hello_world", "en_US", "201012345678")
-    
-    
-    
