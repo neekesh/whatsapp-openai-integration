@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 app = FastAPI()
 
+
 @app.get("/webhook")
 async def root(request: Request):
 
@@ -20,10 +21,10 @@ async def root(request: Request):
     else:
         raise HTTPException(status_code=400, detail="Failure")
 
-
 def send_message(response):
     openai_client = OpenAIClient()
-    reply = openai_client.complete(question=response["body"])
+    
+    reply = openai_client.complete(question=response["body"], phone_no=response["from_no"] )
     wtsapp_client.send_text_message(message=reply, phone_number=response["from_no"])
 
 
@@ -32,7 +33,6 @@ async def receiveMsg(request: Request, background_task: BackgroundTasks):
     
     data = await request.json()
     response = wtsapp_client.process_notification(data)
-
 
     if response["statusCode"] == 200:
         if response["body"] and response["from_no"]:
