@@ -1,7 +1,4 @@
-
-# Imports the Google Cloud client library
 from google.cloud import datastore
-
 
 
 class Datastore:
@@ -17,7 +14,6 @@ class Datastore:
         entity = datastore.Entity(key=create_key)
         entity["description"] = {
             "thread_id": chat_details["thread_id"],
-            
         }
         self.client.put(entity)
         return "Created"
@@ -34,7 +30,7 @@ class Datastore:
             thread_id = entity['description']['thread_id']
             return thread_id
         else:
-            return 
+            return
 
 
 if __name__ == "__main__":
