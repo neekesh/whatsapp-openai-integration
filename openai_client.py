@@ -16,7 +16,7 @@ class OpenAIClient:
         )
 
         assistant = client.beta.assistants.retrieve(
-            os.getenv("OPENAI_API_KEY"),
+            os.getenv("OPENAI_ASSISTANT_ID"),
             )
         thread_id = datastore.get(phone_no)
         if thread_id is None:
