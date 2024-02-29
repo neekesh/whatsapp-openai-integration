@@ -21,24 +21,6 @@ class WhatsAppClient:
         else:
             self.API_URL = self.API_URL + self.WHATSAPP_CLOUD_NUMBER_ID
 
-
-    def send_template_message(self, template_name, language_code, phone_number):
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": phone_number,
-            "type": "template",
-            "template": {
-                "name": template_name,
-                "language": {
-                    "code": language_code
-                }
-            }
-        }
-        response = requests.post(f"{self.API_URL}/messages", json=payload,headers=self.headers)
-        assert response.status_code == 200, "Error sending message"
-        return response.status_code
-
-
     def send_text_message(self,message, phone_number):
         payload = {
             "messaging_product": 'whatsapp',
@@ -69,7 +51,7 @@ class WhatsAppClient:
                                 return {
                                     "statusCode": 200,
                                     "body": prompt,
-                                    "from_no": from_no,
+                                    "sender_id": from_no,
                                     "isBase64Encoded": False
                                 }
 
