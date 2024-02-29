@@ -49,7 +49,6 @@ def send_message(response, to):
                 "messaging_type": "UPDATE",
             },
         )
-        print("hello response form facebook",r.json())
         
 
 @app.post("/webhook", status_code=status.HTTP_200_OK)
