@@ -58,7 +58,7 @@ async def receiveMsg(request: Request, background_task: BackgroundTasks):
     response = wtsapp_client.process_notification(data)
 
     if response["statusCode"] == 200:
-        if response["body"] and response["from_no"]:
+        if response["body"] and response["sender_id"]:
             background_task.add_task(send_message, response,"whatsapp")
             
     
