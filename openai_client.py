@@ -7,23 +7,21 @@ from datastore import Datastore
 load_dotenv()
 datastore = Datastore()
 class OpenAIClient:
-    
-  
 
-    def complete(self, question, phone_no):
+    def complete(self, question, sender_id):
         client = openai.OpenAI(
-            api_key=os.getenv("OPENAI_API_KEY")
-        )
+ api_key=os.getenv("OPENAI_API_KEY"),
+ )
 
         assistant = client.beta.assistants.retrieve(
-            os.getenv("OPENAI_API_KEY"),
+            os.getenv("OPENAI_ASSISTANT_ID"),
             )
-        thread_id = datastore.get(phone_no)
+        thread_id = datastore.get(sender_id)
         if thread_id is None:
             thread = client.beta.threads.create()
             thread_id = thread.id
             datastore.create(chat_details={
-                "phone_no": phone_no,
+                "sender_id": sender_id,
                 "thread_id": thread.id
             })
         client.beta.threads.messages.create(
