@@ -9,7 +9,7 @@ class Datastore:
 
     def create(self, chat_details ):
 
-        name = chat_details["phone_no"]
+        name = chat_details["sender_id"]
         create_key = self.client.key(self.kind, name)
         entity = datastore.Entity(key=create_key)
         entity["description"] = {
@@ -18,8 +18,8 @@ class Datastore:
         self.client.put(entity)
         return "Created"
 
-    def get(self, phone_no):
-        filter_Key = self.client.key(self.kind,phone_no)
+    def get(self, sender_id):
+        filter_Key = self.client.key(self.kind,sender_id)
     
         query = self.client.query(kind=self.kind)
         query.add_filter('__key__', '=', filter_Key)
