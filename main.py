@@ -61,7 +61,6 @@ async def receiveMsg(request: Request, background_task: BackgroundTasks):
         if response["body"] and response["sender_id"]:
             background_task.add_task(send_message, response,"whatsapp")
             
-    
     return jsonable_encoder({"status": "success"})
 
 
@@ -87,7 +86,6 @@ async def webhook(data: WebhookRequestData, background_task: BackgroundTasks):
     """
     Messages handler.
     """
-    print("data", data)
     if data.object == "page":
         for entry in data.entry:
             messaging_events = [

@@ -10,11 +10,11 @@ class OpenAIClient:
 
     def complete(self, question, sender_id):
         client = openai.OpenAI(
- api_key=os.getenv("OPENAI_API_KEY"),
+        api_key=os.environ.get("OPENAI_API_KEY"),
  )
 
         assistant = client.beta.assistants.retrieve(
-            os.getenv("OPENAI_ASSISTANT_ID"),
+            os.environ.get("OPENAI_ASSISTANT_ID"),
             )
         thread_id = datastore.get(sender_id)
         if thread_id is None:
@@ -38,6 +38,7 @@ class OpenAIClient:
                 run_id=run.id
                 )
             if run.completed_at:
+                time.sleep(5)
                 messages = client.beta.threads.messages.list(thread_id=thread_id, order="desc")
                 return messages.data[0].content[0].text.value
 
