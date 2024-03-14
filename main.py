@@ -10,10 +10,13 @@ from openai_client import OpenAIClient
 from dotenv import load_dotenv
 import httpx
 
+from datastore import Datastore
+
 wtsapp_client = WhatsAppClient()
 logger = logging.getLogger(__name__)
 load_dotenv()
 app = FastAPI()
+datastore =Datastore()
 
 
 # Request Models.
@@ -23,7 +26,7 @@ class WebhookRequestData(BaseModel):
 
 
 @app.get("/webhook")
-async def WhatsAppWebhook(request: Request):
+async def whatsapp_webhook_validation(request: Request):
 
     if request.query_params.get('hub.verify_token') == os.getenv("WHATSAPP_HOOK_TOKEN"):
         return int(request.query_params.get('hub.challenge'))
@@ -32,27 +35,65 @@ async def WhatsAppWebhook(request: Request):
     
 
 
-def send_message(response, to):
+def send_message(data, to):
     openai_client = OpenAIClient()
-    reply = openai_client.complete(question=response["body"], sender_id=response["sender_id"] )
+   
+    sender_id = data["sender_id"]
+    reply = openai_client.complete(question=data["body"], sender_id=sender_id )
+
+    chat_details = {
+                    "sender": sender_id,
+                    "incoming": True,
+                    "message_type": "text",
+                    "message": data["body"],
+                }
     if to=="whatsapp":
-        wtsapp_client.send_text_message(message=reply, phone_number=response["sender_id"])
+        chat_details["app_type"] = "whatsapp"
+        chat_details["receiver"] =  os.environ.get("WHATSAPP_CLOUD_NUMBER_ID")
+        datastore.create_chats(
+                sender_id=sender_id,
+                details=chat_details,
+            )
+
+        response = wtsapp_client.send_text_message(message=reply, phone_number=data["sender_id"])
+        if response == 200:
+            chat_details["incoming"] = False
+            chat_details["message"] = reply
+            datastore.create(
+                sender_id=sender_id,
+                details=chat_details
+            )       
         
     else:
-        r = httpx.post(
+        chat_details["app_type"] = "whatsapp"
+        chat_details["receiver"] =  os.environ.get("WHATSAPP_CLOUD_NUMBER_ID")
+        
+        datastore.create_chats(
+                sender_id=sender_id,
+                details=chat_details,
+            )
+         
+        response = httpx.post(
             "https://graph.facebook.com/v2.6/me/messages",
             params={"access_token": os.getenv("FACEBOOK_PAGE_TOKEN")},
             headers={"Content-Type": "application/json"},
             json={
-                "recipient": {"id": response["sender_id"]},
+                "recipient": {"id": sender_id},
                 "message": {"text": reply},
                 "messaging_type": "UPDATE",
             },
         )
+        if response.status_code == 200:
+            chat_details["incoming"] = False
+            chat_details["message"] = reply
+            datastore.create(
+                sender_id=sender_id,
+                details=chat_details
+            )
         
 
 @app.post("/webhook", status_code=status.HTTP_200_OK)
-async def receiveMsg(request: Request, background_task: BackgroundTasks):
+async def receive_msg(request: Request, background_task: BackgroundTasks):
     
     data = await request.json()
     response = wtsapp_client.process_notification(data)
@@ -67,7 +108,7 @@ async def receiveMsg(request: Request, background_task: BackgroundTasks):
 
 
 @app.get("/webhook/messenger")
-async def MessengerWebhook(request: Request):
+async def messenger_webhook_validation(request: Request):
     if request.query_params.get("hub.mode") == "subscribe" and request.query_params.get(
         "hub.challenge"
     ):
@@ -82,7 +123,7 @@ async def MessengerWebhook(request: Request):
 
 
 @app.post("/webhook/messenger")
-async def webhook(data: WebhookRequestData, background_task: BackgroundTasks):
+async def messenger_webhook(data: WebhookRequestData, background_task: BackgroundTasks):
     """
     Messages handler.
     """
@@ -102,3 +143,7 @@ async def webhook(data: WebhookRequestData, background_task: BackgroundTasks):
 
     return jsonable_encoder({"status": "success"})
 
+
+@app.get("/chats/{phone_no}")
+async def get_thread_id(phone_no):
+    return datastore.get_chats(phone_no)
