@@ -59,7 +59,7 @@ def send_message(data, to):
         if response == 200:
             chat_details["incoming"] = False
             chat_details["message"] = reply
-            datastore.create(
+            datastore.create_chats(
                 sender_id=sender_id,
                 details=chat_details
             )       
@@ -86,7 +86,7 @@ def send_message(data, to):
         if response.status_code == 200:
             chat_details["incoming"] = False
             chat_details["message"] = reply
-            datastore.create(
+            datastore.create_chats(
                 sender_id=sender_id,
                 details=chat_details
             )
