@@ -20,8 +20,7 @@ class OpenAIClient:
         if thread_id is None:
             thread = client.beta.threads.create()
             thread_id = thread.id
-            datastore.create(chat_details={
-                "sender_id": sender_id,
+            datastore.create(sender_id, details={
                 "thread_id": thread.id
             })
         client.beta.threads.messages.create(
