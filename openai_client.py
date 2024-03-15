@@ -16,13 +16,17 @@ class OpenAIClient:
         assistant = client.beta.assistants.retrieve(
             os.environ.get("OPENAI_ASSISTANT_ID"),
             )
-        thread_id = datastore.get(sender_id)
+        thread_id = datastore.get_thread(sender_id)
         if thread_id is None:
             thread = client.beta.threads.create()
             thread_id = thread.id
-            datastore.create(sender_id, details={
-                "thread_id": thread.id
-            })
+            datastore.create(
+                sender_id,
+                details={
+                    "thread_id": thread.id
+                },
+                chat=False,
+            )
         client.beta.threads.messages.create(
             thread_id=thread_id, role="user", content=question
         )

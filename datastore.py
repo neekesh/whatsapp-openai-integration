@@ -7,14 +7,18 @@ class Datastore:
         self.client = datastore.Client()
         self.kind = "ChatDetails"
 
-    def create(self, sender_id, details ):
+    def create(self, sender_id, details, chat ):
+        create_key = self.client.key(self.kind, sender_id)
+        if chat:
+            create_key = self.client.key(self.kind, sender_id, "chats")
+        
         create_key = self.client.key(self.kind, sender_id )
         entity = datastore.Entity(key=create_key)
         entity.update(details)
         self.client.put(entity)
         return "Created"
 
-    def get(self, sender_id):
+    def get_thread(self, sender_id):
         filter_Key = self.client.key(self.kind,sender_id)
     
         query = self.client.query(kind=self.kind)
@@ -31,21 +35,10 @@ class Datastore:
         else:
             return
     
-    def create_chats(self, sender_id, details):
-        create_key = self.client.key(self.kind, sender_id, "chats" )
-        entity = datastore.Entity(key=create_key)
-        entity.update(details)
-        self.client.put(entity)
-        return "Created"
-
     def get_chats(self, sender_id):
-
         parent_key = self.client.key(self.kind, sender_id)
-        
         query = self.client.query(kind='chats', ancestor=parent_key)
-        chats = list(query.fetch())
-        
-        return chats
+        return list(query.fetch())
 
 if __name__ == "__main__":
     ds = Datastore()
