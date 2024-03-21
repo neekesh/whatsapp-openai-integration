@@ -10,10 +10,6 @@ datastore = Datastore()
 load_dotenv()
 class FacebookClient:
 
-    API_URL = "https://graph.facebook.com/v18.0/"
-    WHATSAPP_API_TOKEN = os.environ.get("WHATSAPP_API_TOKEN")
-    WHATSAPP_CLOUD_NUMBER_ID = os.environ.get("WHATSAPP_CLOUD_NUMBER_ID")
-
     def __init__(self):
         self.API_URL = "https://graph.facebook.com/v2.6/me/messages"
         self.PARAMS = {"access_token": os.environ.get("FACEBOOK_PAGE_TOKEN")}
