@@ -8,11 +8,14 @@ from pydantic import BaseModel
 from typing import List
 from openai_client import OpenAIClient
 from dotenv import load_dotenv
-import httpx
+
 from datetime import datetime
 
 from datastore import Datastore
+from facebook_client import FacebookClient
 
+
+fbClient = FacebookClient()
 wtsapp_client = WhatsAppClient()
 logger = logging.getLogger(__name__)
 load_dotenv()
@@ -53,6 +56,16 @@ def send_whatsapp_message(message, phone_number):
             chat=True,
         )      
 
+def send_fb_message(message, sender_id):
+    fbClient.send_text_message(message, sender_id)
+    # below code is to save data into data store if needed
+     # if response.status_code == 200:
+        #     chat_details["app_type"] = "messenger"
+        #     chat_details["receiver"] =  os.environ.get("WHATSAPP_CLOUD_NUMBER_ID")
+        #     datastore.create_chats(
+        #         sender_id=sender_id,
+        #         details=chat_details
+        #     )
 
 def send_message(data, to):
     openai_client = OpenAIClient()
@@ -63,24 +76,9 @@ def send_message(data, to):
     if to == "whatsapp":
         send_whatsapp_message(message=reply, phone_number=sender_id)
     else:
-         
-        response = httpx.post(
-            "https://graph.facebook.com/v2.6/me/messages",
-            params={"access_token": os.environ.get("FACEBOOK_PAGE_TOKEN")},
-            headers={"Content-Type": "application/json"},
-            json={
-                "recipient": {"id": sender_id},
-                "message": {"text": reply},
-                "messaging_type": "UPDATE",
-            },
-        )
-        # if response.status_code == 200:
-        #     chat_details["app_type"] = "messenger"
-        #     chat_details["receiver"] =  os.environ.get("WHATSAPP_CLOUD_NUMBER_ID")
-        #     datastore.create_chats(
-        #         sender_id=sender_id,
-        #         details=chat_details
-        #     )
+        fbClient.send_text_message(reply, sender_id)
+        
+       
         
 
 @app.post("/webhook", status_code=status.HTTP_200_OK)
@@ -111,8 +109,6 @@ async def receive_msg(request: Request, background_task: BackgroundTasks):
     return jsonable_encoder({"status": "success"})
 
 
-
-
 @app.get("/webhook/messenger")
 async def messenger_webhook_validation(request: Request):
     if request.query_params.get("hub.mode") == "subscribe" and request.query_params.get(
@@ -134,32 +130,8 @@ async def messenger_webhook(data: WebhookRequestData, background_task: Backgroun
     Messages handler.
     """
     if data.object == "page":
-        for entry in data.entry:
-            messaging_events = [
-                event for event in entry.get("messaging", []) if event.get("message")
-            ]
-            for event in messaging_events:
-                response = {
-                    "body": event.get("message").get("text"),
-                    "sender_id":  event["sender"]["id"]
-            }
-            chat_details = {
-                "sender": response["sender_id"],
-                "incoming": True,
-                "message_type": "text",
-                "message": response["body"],
-                "created_at": datetime.now(),
-                "app_type": "whatsapp",
-                "receiver":  data.entry["id"],
-            }
-            datastore.create(
-                sender_id=response["sender_id"],
-                details=chat_details,
-                chat=True,
-            )
-            
-            background_task.add_task(send_message, response,"facebook")
-
+        message = fbClient.process_msg(data)
+        background_task.add_task(send_message, message,"facebook")
     return jsonable_encoder({"status": "success"})
 
 
